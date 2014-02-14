@@ -1,7 +1,9 @@
-FROM moul/sshd
+FROM moul/tmux
 MAINTAINER Manfred Touron <m@42.am>
 
-RUN apt-get update && \
+# Inspired by https://github.com/mboersma/znc
+
+RUN apt-get -q update && \
     apt-get -qq -y install coreutils g++ libssl-dev make && \
     apt-get clean
 
@@ -13,14 +15,13 @@ RUN cd /tmp/znc-1.2 && \
     rm -rf /tmp/znc-1.2*
 
 RUN useradd -m -d /znc znc
-ADD run /znc/run
 RUN chmod -R +x /znc && \
     chown -R znc:znc /znc
 
-VOLUME ["/znc/state"]
+#VOLUME ["/znc/state"]
 
-WORKDIR /znc
-CMD ["/znc/run"]
-#USER znc
+ADD command /root/command
 
 EXPOSE 6697
+
+CMD ["run-docker-tmux"]

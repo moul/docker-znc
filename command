@@ -17,16 +17,16 @@ fi;
 CONFIG_FILE=${ZNC_ROOT}/configs/znc.conf
 if [ ! -e $CONFIG_FILE ]; then
 
-# exit if there's no znc.conf but user and password were not provided
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 <USER> <PASSWORD>"
-    exit 1
-fi;
+    # exit if there's no znc.conf but user and password were not provided
+    if [ $# -lt 2 ]; then
+	echo "Usage: $0 <USER> <PASSWORD>"
+	exit 1
+    fi;
 
-ZNC_SALT="$(dd if=/dev/urandom bs=16c count=1 | md5sum | awk '{print $1}')"
-ZNC_HASH="$(echo -n ${ZNC_PASS}${ZNC_SALT} | sha256sum | awk '{print $1}')"
+    ZNC_SALT="$(dd if=/dev/urandom bs=16c count=1 | md5sum | awk '{print $1}')"
+    ZNC_HASH="$(echo -n ${ZNC_PASS}${ZNC_SALT} | sha256sum | awk '{print $1}')"
 
-cat<<EOF > ${CONFIG_FILE}
+    cat<<EOF > ${CONFIG_FILE}
 
 Version = 1.2
 
@@ -62,6 +62,15 @@ LoadModule = webadmin
 
 EOF
 
-fi;
+fi
 
-exec znc -r -f -d ${ZNC_ROOT}
+PEM_FILE=${ZNC_ROOT}/znc.pem
+if [ ! -f $PEM_FILE ]; then
+    znc --makepem -d "$ZNC_ROOT"
+fi
+
+
+chown -R znc:znc ~znc
+
+
+su znc -c 'znc -r -f -d /znc/state/'
